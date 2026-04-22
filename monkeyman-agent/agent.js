@@ -17,6 +17,35 @@ const MODEL               = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const MAX_TOOL_ROUNDS     = Number(process.env.MAX_TOOL_ROUNDS || 15);
 const TOOL_RESULT_CHAR_CAP = 100_000;
 
+// Retry budget for transient Gemini capacity errors (503 UNAVAILABLE, 429
+// RESOURCE_EXHAUSTED, generic 5xx). Exponential backoff: 1s, 2s, 4s.
+const RETRYABLE_STATUSES   = [429, 500, 502, 503, 504];
+const MAX_RETRIES          = 3;
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function isTransient(err) {
+  const status = err?.status || err?.response?.status;
+  if (status && RETRYABLE_STATUSES.includes(status)) return true;
+  const msg = String(err?.message || '');
+  return /\b(503|UNAVAILABLE|429|RESOURCE_EXHAUSTED|overloaded|temporarily)\b/i.test(msg);
+}
+
+async function generateWithRetry(args) {
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await ai.models.generateContent(args);
+    } catch (err) {
+      lastErr = err;
+      if (attempt === MAX_RETRIES || !isTransient(err)) throw err;
+      const delay = 1000 * Math.pow(2, attempt);   // 1s, 2s, 4s
+      console.warn(`[agent] Gemini transient error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms: ${err?.message || err}`);
+      await sleep(delay);
+    }
+  }
+  throw lastErr;
+}
+
 function clip(str, n) {
   return str.length <= n ? str : `${str.slice(0, n)}\n...[truncated]`;
 }
@@ -60,7 +89,7 @@ export async function runAgent(sessionId, userMessage, userContext = null) {
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     let response;
     try {
-      response = await ai.models.generateContent({
+      response = await generateWithRetry({
         model: MODEL,
         contents,
         config: {
@@ -71,6 +100,10 @@ export async function runAgent(sessionId, userMessage, userContext = null) {
     } catch (err) {
       const msg = err?.message || String(err);
       console.error('[agent] Gemini API error:', msg);
+      // Give the user a friendlier hint on capacity errors
+      if (isTransient(err)) {
+        throw new Error("Gemini is overloaded right now — please try again in a moment. (If this keeps happening, set GEMINI_MODEL to a different model in your environment variables.)");
+      }
       throw new Error(msg);
     }
 
