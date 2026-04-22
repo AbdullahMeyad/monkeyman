@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monkeyman's — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:        #ffffff;
+      --green-panel:  #3c6e3c;
+      --green-dark:   #2a5a2a;
+      --green-feat:   #4a7a4a;
+      --green-btn:    #3a6a3a;
+      --green-hover:  #2a5a2a;
+      --label-brown:  #8b6e14;
+      --text-dark:    #111827;
+      --text-mid:     #6b7280;
+      --text-faint:   #9ca3af;
+      --border-line:  #d1d5db;
+      --white:        #ffffff;
+      --font:         'Inter', -apple-system, sans-serif;
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--cream);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+
+    /* ── Outer card ────────────────────────────────────────── */
+    .card {
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 580px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+      animation: rise 0.4s cubic-bezier(0.2,0.8,0.2,1);
+    }
+    @keyframes rise { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── LEFT PANEL ────────────────────────────────────────── */
+    .left {
+      width: 44%;
+      flex-shrink: 0;
+      background: var(--green-panel);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tree background image */
+    .left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url('https://monkeymans.com/wp-content/uploads/2025/07/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.22;
+    }
+
+    /* Fallback tree silhouette */
+    .tree-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 200px 260px at 50% 50%,
+          rgba(255,255,255,0.065) 0%, transparent 65%),
+        radial-gradient(ellipse 130px 150px at 32% 46%,
+          rgba(255,255,255,0.05) 0%, transparent 58%),
+        radial-gradient(ellipse 110px 130px at 68% 48%,
+          rgba(255,255,255,0.05) 0%, transparent 58%),
+        radial-gradient(ellipse 35px 130px at 50% 74%,
+          rgba(255,255,255,0.04) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .left-in {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      height: 100%; padding: 26px 32px 28px;
+    }
+
+    /* Brand row */
+    .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: auto; }
+    .brand-ico {
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .brand-name { font-size: 16px; font-weight: 600; color: #fff; }
+
+    /* Hero center */
+    .hero {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 24px 0 20px;
+    }
+
+    /* Pine tree — Christmas tree outline matching screenshot */
+    .pine-wrap { margin-bottom: 18px; }
+    .pine-wrap svg { width: 52px; height: 58px; }
+
+    .hero-title {
+      font-size: 28px; font-weight: 800; color: #fff;
+      line-height: 1.15; margin-bottom: 12px; letter-spacing: -0.3px;
+    }
+    .hero-desc {
+      font-size: 12.5px; color: rgba(255,255,255,0.65);
+      line-height: 1.65; max-width: 270px; margin-bottom: 26px;
+    }
+
+    /* Feature pills */
+    .feats { width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 8px; }
+    .feat {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 7px; padding: 9px 14px;
+      color: rgba(255,255,255,0.88); font-size: 13px; font-weight: 500;
+    }
+    .feat svg { width: 16px; height: 16px; flex-shrink: 0; color: rgba(255,255,255,0.6); }
+
+    /* Bottom row */
+    .left-bottom {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .left-tagline { font-size: 11px; color: rgba(255,255,255,0.38); }
+    .bell-ico { color: rgba(255,255,255,0.3); }
+    .bell-ico svg { width: 18px; height: 18px; }
+
+    /* ── RIGHT PANEL ───────────────────────────────────────── */
+    .right {
+      flex: 1; background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 36px;
+    }
+
+    .form-box { width: 100%; max-width: 370px; }
+
+    /* Logo */
+    .logo-wrap { text-align: center; margin-bottom: 24px; }
+    .logo-img  { height: 58px; width: auto; max-width: 230px; object-fit: contain; }
+    .logo-fb   {
+      display: none; align-items: center; justify-content: center; gap: 9px;
+    }
+    .logo-fb .lf-icon {
+      width: 46px; height: 46px; background: #f5f0e4;
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 24px;
+      border: 2px solid #d4b896;
+    }
+    .logo-fb .lf-text .lf-name {
+      font-size: 19px; font-weight: 700; color: #4a2e0a;
+      font-style: italic; letter-spacing: -0.3px;
+    }
+    .logo-fb .lf-text .lf-sub {
+      font-size: 9px; font-weight: 600; letter-spacing: 3px;
+      color: #888; text-transform: uppercase; margin-top: 1px;
+    }
+
+    /* Headings */
+    .fh1 {
+      font-size: 21px; font-weight: 700; color: var(--text-dark);
+      text-align: center; margin-bottom: 4px; letter-spacing: -0.3px;
+    }
+    .fsub {
+      font-size: 13px; color: var(--text-mid);
+      text-align: center; margin-bottom: 26px;
+    }
+
+    /* Error */
+    .err {
+      display: none; background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 7px; padding: 9px 12px; font-size: 13px;
+      color: #dc2626; margin-bottom: 14px;
+    }
+    .err.on { display: block; }
+
+    /* Field — underline style */
+    .field { margin-bottom: 18px; }
+
+    .f-lbl {
+      display: block; font-size: 12.5px; font-weight: 500;
+      color: var(--label-brown); margin-bottom: 8px;
+    }
+
+    .f-row {
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1.5px solid var(--border-line);
+      padding-bottom: 7px;
+      transition: border-color 0.15s;
+    }
+    .f-row:focus-within { border-color: var(--green-panel); }
+
+    .f-ico { width: 16px; height: 16px; color: #9ca3af; flex-shrink: 0; }
+
+    .f-inp {
+      flex: 1; background: transparent; border: none;
+      color: var(--text-dark); font-family: var(--font);
+      font-size: 14px; outline: none; padding: 2px 0;
+    }
+    .f-inp::placeholder { color: #c8c8c8; }
+
+    .eye-btn {
+      background: none; border: none; cursor: pointer;
+      color: #9ca3af; padding: 2px; line-height: 0;
+      transition: color 0.15s;
+    }
+    .eye-btn:hover { color: var(--green-panel); }
+
+    /* Mid row */
+    .mid {
+      display: flex; align-items: center;
+      justify-content: space-between; margin: 4px 0 20px;
+    }
+    .rem {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; color: var(--text-mid); cursor: pointer; user-select: none;
+    }
+    .rem input[type="checkbox"] {
+      width: 15px; height: 15px;
+      accent-color: var(--green-btn); cursor: pointer; padding: 0;
+    }
+    .fgt { font-size: 13px; font-weight: 600; color: var(--text-dark); text-decoration: none; }
+    .fgt:hover { text-decoration: underline; }
+
+    /* Button */
+    .btn {
+      width: 100%; background: var(--green-btn); color: #fff;
+      border: none; border-radius: 8px; padding: 13px;
+      font-family: var(--font); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      margin-bottom: 18px; letter-spacing: 0.1px;
+    }
+    .btn:hover:not(:disabled) {
+      background: var(--green-hover);
+      box-shadow: 0 4px 16px rgba(42,90,42,0.3);
+      transform: translateY(-1px);
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Badges */
+    .badges {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-bottom: 18px;
+    }
+    .badge { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-faint); }
+    .badge svg { width: 13px; height: 13px; }
+
+    .copy { text-align: center; font-size: 11.5px; color: var(--text-faint); }
+
+    /* Loading */
+    .dots { display:inline-flex; gap:3px; vertical-align:middle; margin-left:6px; }
+    .dots span {
+      width:4px; height:4px; border-radius:50%; background:#fff; opacity:.7;
+      animation: dot 1.2s infinite;
+    }
+    .dots span:nth-child(2){animation-delay:.15s}
+    .dots span:nth-child(3){animation-delay:.3s}
+    @keyframes dot{0%,60%,100%{opacity:.7;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+    @media (max-width: 700px) {
+      .card { flex-direction: column; max-width: 420px; }
+      .left { width: 100%; min-height: 260px; }
+      .hero-desc { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- LEFT ─────────────────────────────────────────────── -->
+  <div class="left">
+    <div class="tree-bg"></div>
+    <div class="left-in">
+
+      <div class="brand-row">
+        <div class="brand-ico"><img src="https://portal.monkeymans.com/assets/Monkey-DJMP2htN.gif" alt="Monkey" style="width:26px;height:26px;object-fit:contain;" /></div>
+        <span class="brand-name">Monkeyman's</span>
+      </div>
+
+      <div class="hero">
+        <div class="pine-wrap">
+          <!-- Christmas/pine tree outline matching screenshot -->
+          <svg viewBox="0 0 52 58" fill="none" stroke="white" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+            <!-- top triangle -->
+            <path d="M26 3 L44 24 L34 24 L46 42 L32 42 L32 55 L20 55 L20 42 L6 42 L18 24 L8 24 Z"/>
+            <!-- star/dot at top -->
+            <circle cx="26" cy="3" r="2" fill="white" stroke="none"/>
+          </svg>
+        </div>
+
+        <h1 class="hero-title">Professional<br>Tree Services</h1>
+        <p class="hero-desc">Your trusted partner for expert tree care, maintenance, and removal. Join our platform for seamless service management.</p>
+
+        <div class="feats">
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Certified arborists &amp; experts
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Safe &amp; reliable service
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Eco-friendly practices
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            24/7 emergency response
+          </div>
+        </div>
+      </div>
+
+      <div class="left-bottom">
+        <span class="left-tagline">Committed to excellence since 2020</span>
+        <span class="bell-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT ────────────────────────────────────────────── -->
+  <div class="right">
+    <div class="form-box">
+
+      <div class="logo-wrap">
+        <img
+          class="logo-img"
+          id="logoImg"
+          src="https://monkeymans.com/wp-content/uploads/2025/09/cropped-1-1.gif"
+          alt="Monkeyman's Tree Service"
+          onerror="this.style.display='none'; document.getElementById('logoFb').style.display='flex';"
+        />
+        <div class="logo-fb" id="logoFb">
+          <div class="lf-icon">🐵</div>
+          <div class="lf-text">
+            <div class="lf-name">monkeyman's</div>
+            <div class="lf-sub">Tree Service</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="fh1">Sign in to your account</h2>
+      <p class="fsub">Access your workspace and manage services</p>
+
+      <div class="err" id="errBox"></div>
+
+      <div class="field">
+        <label class="f-lbl" for="email">Email</label>
+        <div class="f-row">
+          <svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <input class="f-inp" type="email" id="email" placeholder="email@monkeymans.com" autocomplete="email" autofocus />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="f-lbl" for="password">Password</label>
+        <div class="f-row">
+          <svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input class="f-inp" type="password" id="password" placeholder="••••••••••••" autocomplete="current-password" />
+          <button class="eye-btn" id="eyeBtn" type="button">
+            <svg id="eyeIco" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="mid">
+        <label class="rem">
+          <input type="checkbox" id="rem" />
+          Remember me
+        </label>
+        <a href="#" class="fgt">Forgot password?</a>
+      </div>
+
+      <button class="btn" id="signInBtn">Sign in to Account</button>
+
+      <div class="badges">
+        <div class="badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12,6 12,12 16,14"/>
+          </svg>
+          Secure Login
+        </div>
+        <div class="badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          Environmental Focus
+        </div>
+      </div>
+
+      <div class="copy">© 2026 Monkeyman's Tree Services. All rights reserved.</div>
+    </div>
+  </div>
+
+</div>
+<script>
+  try {
+    const s = sessionStorage.getItem('mm_auth');
+    if (s) {
+      const { token } = JSON.parse(s);
+      if (token) fetch('/auth/me', { headers: { Authorization: 'Bearer ' + token } })
+        .then(r => { if (r.ok) window.location.replace('/'); }).catch(() => {});
+    }
+  } catch (_) {}
+
+  const emailEl = document.getElementById('email');
+  const passEl  = document.getElementById('password');
+  const btn     = document.getElementById('signInBtn');
+  const errBox  = document.getElementById('errBox');
+  const eyeBtn  = document.getElementById('eyeBtn');
+  const eyeIco  = document.getElementById('eyeIco');
+
+  eyeBtn.addEventListener('click', () => {
+    const show = passEl.type === 'password';
+    passEl.type = show ? 'text' : 'password';
+    eyeIco.innerHTML = show
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  });
+
+  const showErr = m => { errBox.textContent = '⚠  ' + m; errBox.classList.add('on'); };
+  const clrErr  = ()  => errBox.classList.remove('on');
+  const setBusy = b   => {
+    btn.disabled = b;
+    btn.innerHTML = b
+      ? 'Signing In<span class="dots"><span></span><span></span><span></span></span>'
+      : 'Sign in to Account';
+  };
+
+  async function signIn() {
+    clrErr();
+    const email = emailEl.value.trim();
+    const pass  = passEl.value;
+    if (!email) { showErr('Please enter your email.'); emailEl.focus(); return; }
+    if (!pass)  { showErr('Please enter your password.'); passEl.focus(); return; }
+    setBusy(true);
+    try {
+      const res  = await fetch('/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showErr(data.error || 'Login failed.'); return; }
+      sessionStorage.setItem('mm_auth', JSON.stringify({
+        token: data.token, email: data.email, role: data.role, name: data.name,
+      }));
+      window.location.replace('/');
+    } catch { showErr('Network error — is the server running?'); }
+    finally { setBusy(false); }
+  }
+
+  btn.addEventListener('click', signIn);
+  [emailEl, passEl].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') signIn(); }));
+</script>
+</body>
+</html>

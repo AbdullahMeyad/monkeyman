@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>MonkeyMan — API Status</title>
+<style>
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 24px;
+    color: #1a1a1a;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 6px 0;
+    color: #1e4620;
+  }
+  p.hint {
+    margin: 0 0 18px 0;
+    color: #555;
+    font-size: 13px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #ffffff;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  th, td {
+    border: 1px solid #d0d0d0;
+    padding: 8px 10px;
+    vertical-align: top;
+    text-align: left;
+  }
+  thead th {
+    background: #1e4620;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  tbody tr:nth-child(even) td { background: #fafafa; }
+
+  /* Category color pills (applied to the category cell) */
+  .cat-llm        { background: #ede7f6; color: #4527a0; font-weight: 700; }
+  .cat-auth       { background: #e3f2fd; color: #0d47a1; font-weight: 700; }
+  .cat-employees  { background: #e8f5e9; color: #1b5e20; font-weight: 700; }
+  .cat-tasks      { background: #e0f2f1; color: #004d40; font-weight: 700; }
+  .cat-projects   { background: #fff3e0; color: #e65100; font-weight: 700; }
+  .cat-equipment  { background: #fff8e1; color: #bf360c; font-weight: 700; }
+  .cat-pto        { background: #fce4ec; color: #880e4f; font-weight: 700; }
+  .cat-vtr        { background: #ffebee; color: #b71c1c; font-weight: 700; }
+  .cat-incidents  { background: #ffcdd2; color: #7f0000; font-weight: 700; }
+  .cat-oncall     { background: #e8eaf6; color: #1a237e; font-weight: 700; }
+  .cat-forms      { background: #fffde7; color: #827717; font-weight: 700; }
+  .cat-permits    { background: #efebe9; color: #3e2723; font-weight: 700; }
+  .cat-int-auth   { background: #bbdefb; color: #0d47a1; font-weight: 700; }
+  .cat-int-chat   { background: #c8e6c9; color: #1b5e20; font-weight: 700; }
+
+  /* Provider badges */
+  .prov-gemini { background: #ede7f6; color: #311b92; font-weight: 700; text-align: center; }
+  .prov-mm     { background: #e8f5e9; color: #1b5e20; font-weight: 700; text-align: center; }
+  .prov-int    { background: #eceff1; color: #263238; font-weight: 700; text-align: center; }
+
+  /* HTTP method cells */
+  .m-get    { background: #dcedc8; color: #33691e; font-weight: 700; text-align: center; }
+  .m-post   { background: #ffe0b2; color: #e65100; font-weight: 700; text-align: center; }
+  .m-delete { background: #ffcdd2; color: #b71c1c; font-weight: 700; text-align: center; }
+
+  /* Status checkbox columns */
+  .st-working   { background: #e8f5e9; text-align: center; font-family: monospace; }
+  .st-broken    { background: #ffebee; text-align: center; font-family: monospace; }
+
+  /* Endpoint cell uses mono font */
+  .ep { font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; color: #0d47a1; }
+
+  /* File reference */
+  .file { font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; color: #4e342e; }
+
+  /* Write-action emphasis */
+  .write-note { color: #b71c1c; font-weight: 700; }
+
+  /* Row number */
+  td.num { text-align: center; font-weight: 700; color: #555; background: #f5f5f5; width: 32px; }
+
+  .legend {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .legend span {
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<h1>🌲 MonkeyMan Agent — API Status</h1>
+<p class="hint">To paste into Google Sheets: open this file in your browser → Ctrl/Cmd + A → Ctrl/Cmd + C → paste into a new sheet. Colors and formatting will carry over. Tick the Working / Not Working column per row.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Category</th>
+      <th>Feature / Tool</th>
+      <th>What It Does</th>
+      <th>API Provider</th>
+      <th>API Endpoint</th>
+      <th>Method</th>
+      <th>Used By (File)</th>
+      <th>Working ✅</th>
+      <th>Not Working ❌</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td class="num">1</td>
+      <td class="cat-llm">LLM Provider</td>
+      <td>Chat completions</td>
+      <td>Runs the agent's reasoning + tool-use loop for every user message.</td>
+      <td class="prov-gemini">Google Gemini</td>
+      <td class="ep">https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent</td>
+      <td class="m-post">POST</td>
+      <td class="file">agent.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Target model: <b>gemini-2.5-pro</b> (quality) or <b>gemini-2.5-flash</b> (cheap/fast). Replaces Anthropic — key in .env as <code>GEMINI_API_KEY</code>.</td>
+    </tr>
+
+    <tr>
+      <td class="num">2</td>
+      <td class="cat-auth">Authentication</td>
+      <td>Verify employee on login</td>
+      <td>Looks up an employee by email to confirm they exist before issuing a session token.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/employee/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">server.js (/auth/login)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Called first during login. 404/null → "No employee found".</td>
+    </tr>
+
+    <tr>
+      <td class="num">3</td>
+      <td class="cat-auth">Authentication</td>
+      <td>Fetch role + status on login</td>
+      <td>Gets the employee's role and Active/Inactive status so the session can enforce permissions later.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/employee/email/{email}/role</td>
+      <td class="m-get">GET</td>
+      <td class="file">server.js (/auth/login)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Stamps role into the server-side session — no further role API calls needed per chat turn.</td>
+    </tr>
+
+    <tr>
+      <td class="num">4</td>
+      <td class="cat-employees">Employees</td>
+      <td>List all employees</td>
+      <td>Returns every employee — used to resolve a name → email.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/employee/all</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Retrieve_All_Employee_Details)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">5</td>
+      <td class="cat-employees">Employees</td>
+      <td>Get one employee profile</td>
+      <td>Returns a single employee record including the Mongo _id (needed for task creation).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/employee/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Retrieve_Specific_Employee_Details)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">6</td>
+      <td class="cat-employees">Employees</td>
+      <td>Get role + permissions</td>
+      <td>Returns role / status / permissions for an email (agent-triggered lookup).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/employee/email/{email}/role</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_user_role_and_permissions)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Largely redundant post-login — role already lives in the session.</td>
+    </tr>
+
+    <tr>
+      <td class="num">7</td>
+      <td class="cat-tasks">Tasks</td>
+      <td>Today's tasks</td>
+      <td>Returns every task created today (org-wide).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/daily-task</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_today_task)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">8</td>
+      <td class="cat-tasks">Tasks</td>
+      <td>Tasks for one employee</td>
+      <td>Lists tasks assigned to a specific email.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/daily-task/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_task_by_email)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">9</td>
+      <td class="cat-tasks">Tasks</td>
+      <td>Tasks by creation date</td>
+      <td>Filters tasks by createdAt (YYYY-MM-DD).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/daily-task?createdAt={YYYY-MM-DD}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_task_by_create_date)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">10</td>
+      <td class="cat-tasks">Tasks</td>
+      <td>Create daily task</td>
+      <td>Creates a new task. assignedBy + assignedTo must be Mongo _ids.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/daily-task</td>
+      <td class="m-post">POST</td>
+      <td class="file">tools.js (Daily_task_create)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td><span class="write-note">WRITE action</span> — role gate enforced from session (Manager / Admin / DepartmentHead).</td>
+    </tr>
+
+    <tr>
+      <td class="num">11</td>
+      <td class="cat-projects">Projects</td>
+      <td>Projects by employee</td>
+      <td>Returns projects an employee is associated with.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/projects/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (projects_tool)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">12</td>
+      <td class="cat-equipment">Equipment</td>
+      <td>Equipment / product inventory</td>
+      <td>Returns the full equipment catalog.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/product?page=1&amp;limit=9000000</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (equipment_products_tool)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Limit intentionally huge to fetch everything in one call.</td>
+    </tr>
+
+    <tr>
+      <td class="num">13</td>
+      <td class="cat-pto">PTO</td>
+      <td>PTO by employee</td>
+      <td>Primary PTO lookup — returns all PTO for one email.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/pto/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_pto_by_email)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">14</td>
+      <td class="cat-pto">PTO</td>
+      <td>PTO by id</td>
+      <td>Single PTO record by _id.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/pto/{id}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_PTO_by_id)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">15</td>
+      <td class="cat-pto">PTO</td>
+      <td>PTO by date range</td>
+      <td>All PTO overlapping a date window (last resort — prefer by-email).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/pto?startDate&amp;endDate</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_all_PTO)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">16</td>
+      <td class="cat-pto">PTO</td>
+      <td>Request a PTO</td>
+      <td>Submits a new PTO request.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/pto</td>
+      <td class="m-post">POST</td>
+      <td class="file">tools.js (Request_a_PTO)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td><span class="write-note">WRITE action</span> — submitter email taken from session.</td>
+    </tr>
+
+    <tr>
+      <td class="num">17</td>
+      <td class="cat-pto">PTO</td>
+      <td>Approve / deny PTO</td>
+      <td>Flips a PTO to approved or rejected with a comment.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/pto/{id}/status</td>
+      <td class="m-post">POST</td>
+      <td class="file">tools.js (Approve_or_Deny_a_PTO)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td><span class="write-note">WRITE action</span> — Manager / Admin / DepartmentHead only.</td>
+    </tr>
+
+    <tr>
+      <td class="num">18</td>
+      <td class="cat-vtr">VTR (Timecards)</td>
+      <td>VTR by employee</td>
+      <td>Timecard records for an employee (by weekEnding or date range).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/timecard/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_VTR_by_email)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">19</td>
+      <td class="cat-vtr">VTR (Timecards)</td>
+      <td>Verify a VTR</td>
+      <td>Marks a timecard as verified by a manager.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/timecard/{id}/verify</td>
+      <td class="m-post">POST</td>
+      <td class="file">tools.js (Verify_VTR)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td><span class="write-note">WRITE action</span> — Manager / Admin / DepartmentHead only.</td>
+    </tr>
+
+    <tr>
+      <td class="num">20</td>
+      <td class="cat-incidents">Incidents</td>
+      <td>File an incident</td>
+      <td>Creates a new incident report.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/incident-report</td>
+      <td class="m-post">POST</td>
+      <td class="file">tools.js (Report_incident)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td><span class="write-note">WRITE action</span> — completedByEmail is the logged-in user.</td>
+    </tr>
+
+    <tr>
+      <td class="num">21</td>
+      <td class="cat-incidents">Incidents</td>
+      <td>Incidents by employee</td>
+      <td>Past incident reports filed / involving / witnessed by the email.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/incident-report/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_incidents_by_email)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Supports page + limit.</td>
+    </tr>
+
+    <tr>
+      <td class="num">22</td>
+      <td class="cat-oncall">On-Call</td>
+      <td>On-call for one employee</td>
+      <td>Schedule for the employee's team(s).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/oncall/email/{email}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_my_on_call_schedule)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">23</td>
+      <td class="cat-oncall">On-Call</td>
+      <td>All rotations</td>
+      <td>All on-call rotations — optional year + month filter.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/oncall?year&amp;month</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_all_on_call_rotations)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">24</td>
+      <td class="cat-oncall">On-Call</td>
+      <td>Rotations by date range</td>
+      <td>Rotations overlapping a date range (both dates required).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/oncall/date-range?startDate&amp;endDate</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_on_call_by_date_range)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">25</td>
+      <td class="cat-forms">Forms</td>
+      <td>List forms</td>
+      <td>All active checklist / form templates.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/forms</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (List_forms)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">26</td>
+      <td class="cat-forms">Forms</td>
+      <td>Form by id</td>
+      <td>Single form template by _id.</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/forms/{id}</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Get_form_by_id)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">27</td>
+      <td class="cat-permits">Permits</td>
+      <td>Permit rules lookup</td>
+      <td>Filters permit rules by municipality / type (all filters optional).</td>
+      <td class="prov-mm">MonkeyMan Backend</td>
+      <td class="ep">https://server.monkeymans.com/api/permit?municipality&amp;type&amp;page&amp;limit</td>
+      <td class="m-get">GET</td>
+      <td class="file">tools.js (Permit_rules_lookup)</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Case-insensitive filters.</td>
+    </tr>
+
+    <tr>
+      <td class="num">28</td>
+      <td class="cat-int-auth">Internal — Auth</td>
+      <td>Login</td>
+      <td>Issues a bearer token after validating email + password.</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/auth/login</td>
+      <td class="m-post">POST</td>
+      <td class="file">server.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Calls MonkeyMan employee + role APIs internally. Shared password: <code>LOGIN_PASSWORD</code> in .env.</td>
+    </tr>
+
+    <tr>
+      <td class="num">29</td>
+      <td class="cat-int-auth">Internal — Auth</td>
+      <td>Session restore</td>
+      <td>Returns the current session so the UI can restore state on reload.</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/auth/me</td>
+      <td class="m-get">GET</td>
+      <td class="file">server.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Requires Bearer token. 8-hour TTL.</td>
+    </tr>
+
+    <tr>
+      <td class="num">30</td>
+      <td class="cat-int-auth">Internal — Auth</td>
+      <td>Logout</td>
+      <td>Invalidates the bearer token server-side.</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/auth/logout</td>
+      <td class="m-post">POST</td>
+      <td class="file">server.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">31</td>
+      <td class="cat-int-chat">Internal — Chat</td>
+      <td>Send message to agent</td>
+      <td>Main chat entry point — routes user input through the Gemini tool-use loop.</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/chat</td>
+      <td class="m-post">POST</td>
+      <td class="file">server.js → agent.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Requires Bearer token. Returns <code>{ output, toolCalls }</code>.</td>
+    </tr>
+
+    <tr>
+      <td class="num">32</td>
+      <td class="cat-int-chat">Internal — Chat</td>
+      <td>Clear session memory</td>
+      <td>Wipes the conversation history for a sessionId (New Chat button).</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/chat/{sessionId}</td>
+      <td class="m-delete">DELETE</td>
+      <td class="file">server.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="num">33</td>
+      <td class="cat-int-chat">Internal — Chat</td>
+      <td>Health check</td>
+      <td>Liveness probe for uptime monitors.</td>
+      <td class="prov-int">Internal (this service)</td>
+      <td class="ep">/health</td>
+      <td class="m-get">GET</td>
+      <td class="file">server.js</td>
+      <td class="st-working">[ ]</td>
+      <td class="st-broken">[ ]</td>
+      <td>Returns <code>{ ok, model, devMode }</code>. Update model string to Gemini on swap.</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<div class="legend">
+  <span class="prov-gemini">Google Gemini</span>
+  <span class="prov-mm">MonkeyMan Backend</span>
+  <span class="prov-int">Internal</span>
+  <span class="m-get">GET</span>
+  <span class="m-post">POST</span>
+  <span class="m-delete">DELETE</span>
+  <span class="st-working">Working column</span>
+  <span class="st-broken">Not Working column</span>
+</div>
+
+</body>
+</html>

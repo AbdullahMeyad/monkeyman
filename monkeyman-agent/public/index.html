@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monkeyman's — Agent Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:    #1a3a1a;
+      --green-deep:    #1e4620;
+      --green-mid:     #2d6a2d;
+      --green-bright:  #3d8b3d;
+      --green-light:   #4da64d;
+      --green-muted:   #5c8c5c;
+      --green-pale:    #e8f5e8;
+      --bark:          #5c3d1e;
+      --bark-light:    #8b5e3c;
+      --cream:         #f5f0e8;
+      --cream-2:       #ede6d6;
+      --cream-3:       #e0d8c8;
+      --tan:           #c8b89a;
+      --tan-dark:      #a09070;
+      --white:         #ffffff;
+      --text-dark:     #1a2e1a;
+      --text-mid:      #3d5c3d;
+      --text-light:    #6b8c6b;
+      --text-faint:    #a0b8a0;
+      --border:        #d8cebb;
+      --border-dark:   #c0b09a;
+      --accent:        #3d8b3d;
+      --error:         #c0392b;
+      --success:       #27ae60;
+      --warn:          #e67e22;
+      --role-admin:    #8e44ad;
+      --role-manager:  #2980b9;
+      --role-dept:     #16a085;
+      --role-employee: #7f8c8d;
+      --font-head:     'Oswald', 'Impact', sans-serif;
+      --font-body:     'Lato', 'Georgia', serif;
+      --font-mono:     'JetBrains Mono', monospace;
+      --shadow:        0 2px 12px rgba(26, 58, 26, 0.12);
+      --shadow-md:     0 4px 24px rgba(26, 58, 26, 0.16);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      background: var(--cream);
+      color: var(--text-dark);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    /* ─── Header ──────────────────────────────────────────── */
+    header {
+      background: var(--green-dark);
+      border-bottom: 3px solid var(--green-bright);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Subtle bark texture on header */
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px,
+        transparent 1px, transparent 40px
+      );
+      pointer-events: none;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .logo-img {
+      height: 34px;
+      width: auto;
+      filter: brightness(0) invert(1);
+    }
+
+    .logo-fallback {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--white);
+    }
+
+    .nav-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green-light);
+      padding: 2px 8px;
+      border: 1px solid rgba(77,166,77,0.35);
+      border-radius: 2px;
+      background: rgba(77,166,77,0.08);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    /* User pill */
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 4px 12px 4px 6px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--green-mid);
+      border: 1.5px solid var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-head);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--white);
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .user-details { display: flex; flex-direction: column; }
+    .user-name  { font-size: 13px; font-weight: 700; color: var(--white); line-height: 1.2; }
+    .user-email { font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,0.45); }
+
+    .role-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid;
+      flex-shrink: 0;
+    }
+    .role-badge.Admin          { color: #c39bd3; border-color: rgba(142,68,173,0.4); background: rgba(142,68,173,0.12); }
+    .role-badge.Manager        { color: #85c1e9; border-color: rgba(41,128,185,0.4); background: rgba(41,128,185,0.12); }
+    .role-badge.DepartmentHead { color: #76d7c4; border-color: rgba(22,160,133,0.4); background: rgba(22,160,133,0.12); }
+    .role-badge.Employee       { color: #aab7b8; border-color: rgba(127,140,141,0.4); background: rgba(127,140,141,0.12); }
+
+    .hdr-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7);
+      padding: 6px 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .hdr-btn:hover { border-color: var(--green-light); color: var(--green-light); background: rgba(77,166,77,0.1); }
+    .hdr-btn.logout:hover { border-color: #e74c3c; color: #e74c3c; background: rgba(231,76,60,0.1); }
+
+
+
+    /* ─── Messages ───────────────────────────────────────── */
+    main {
+      overflow-y: auto;
+      padding: 28px 24px;
+      background: var(--cream);
+      background-image:
+        radial-gradient(circle at 95% 5%, rgba(45,106,45,0.05), transparent 40%),
+        radial-gradient(circle at 5% 95%, rgba(45,106,45,0.04), transparent 40%);
+    }
+
+    .msg-list {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Welcome */
+    .welcome {
+      max-width: 640px;
+      margin: 20px auto;
+      text-align: center;
+      animation: fade-in 0.4s ease-out;
+    }
+
+    .welcome-tree {
+      font-size: 52px;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 8px rgba(26,58,26,0.2));
+    }
+
+    .welcome-title {
+      font-family: var(--font-head);
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+    }
+
+    .welcome-greet {
+      font-size: 15px;
+      color: var(--text-mid);
+      margin-bottom: 28px;
+    }
+    .welcome-greet strong { color: var(--green-mid); }
+
+    .examples-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .example {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 3px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 13.5px;
+      color: var(--text-mid);
+      font-family: var(--font-body);
+      line-height: 1.4;
+    }
+    .example:hover {
+      border-color: var(--green-mid);
+      color: var(--green-dark);
+      background: var(--green-pale);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+    .example::before { content: '› '; color: var(--green-mid); font-weight: 700; }
+
+    @keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Bubbles */
+    .msg { animation: slide-up 0.25s ease-out; }
+
+    .msg.user { display: flex; justify-content: flex-end; }
+    .msg.user .bubble {
+      background: var(--green-deep);
+      color: var(--white);
+      border-radius: 14px 14px 3px 14px;
+      padding: 10px 16px;
+      max-width: 78%;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 14.5px;
+      line-height: 1.5;
+      box-shadow: var(--shadow);
+    }
+
+    .msg.assistant .bubble {
+      padding: 4px 0;
+      max-width: 100%;
+    }
+    .msg.assistant .bubble p  { margin: 7px 0; color: var(--text-dark); }
+    .msg.assistant .bubble strong { color: var(--green-dark); font-weight: 700; }
+    .msg.assistant .bubble em { color: var(--text-mid); font-style: italic; }
+    .msg.assistant .bubble code {
+      font-family: var(--font-mono); font-size: 12.5px;
+      background: var(--cream-2); padding: 2px 6px;
+      border-radius: 2px; color: var(--bark);
+      border: 1px solid var(--border);
+    }
+    .msg.assistant .bubble pre {
+      background: var(--cream-2); padding: 14px;
+      border-radius: 3px; overflow-x: auto;
+      margin: 10px 0; border: 1px solid var(--border);
+    }
+    .msg.assistant .bubble pre code { background: transparent; padding: 0; border: none; color: var(--text-dark); }
+    .msg.assistant .bubble ul, .msg.assistant .bubble ol { padding-left: 22px; margin: 7px 0; }
+    .msg.assistant .bubble li { margin: 4px 0; color: var(--text-dark); }
+    .msg.assistant .bubble blockquote {
+      border-left: 3px solid var(--green-mid);
+      padding-left: 14px; margin: 10px 0;
+      color: var(--text-mid);
+      background: var(--green-pale);
+      padding: 8px 14px;
+      border-radius: 0 3px 3px 0;
+    }
+    .msg.assistant .bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13.5px; width: 100%; }
+    .msg.assistant .bubble th, .msg.assistant .bubble td {
+      border: 1px solid var(--border); padding: 7px 12px; text-align: left;
+    }
+    .msg.assistant .bubble th {
+      background: var(--green-deep); color: var(--white);
+      font-family: var(--font-head); letter-spacing: 1px; font-size: 12px;
+    }
+    .msg.assistant .bubble tr:nth-child(even) td { background: var(--cream-2); }
+    .msg.assistant .bubble hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+    .msg.assistant .bubble a { color: var(--green-mid); text-decoration: underline; }
+    .msg.assistant .bubble h1, .msg.assistant .bubble h2, .msg.assistant .bubble h3 {
+      font-family: var(--font-head); color: var(--green-dark);
+      letter-spacing: 1px; margin: 12px 0 6px;
+    }
+
+    /* Tool trace */
+    .tool-trace {
+      display: flex; flex-wrap: wrap; gap: 5px;
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+    .tool-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font-mono); font-size: 10.5px;
+      background: var(--cream-2); border: 1px solid var(--border);
+      padding: 3px 8px; border-radius: 2px; color: var(--text-mid);
+      cursor: help;
+    }
+    .tool-badge.ok  { border-color: rgba(39,174,96,0.35); }
+    .tool-badge.err { border-color: rgba(192,57,43,0.4); color: var(--error); }
+    .tool-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+    .tool-badge.err .dot { background: var(--error); }
+    .tool-badge .dur { color: var(--text-faint); }
+
+    /* Typing */
+    .typing { display: flex; gap: 5px; padding: 12px 0; }
+    .typing span {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green-mid); opacity: 0.4;
+      animation: bounce 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%,60%,100% { opacity: 0.4; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-5px); }
+    }
+
+    .error-msg {
+      background: #fdf0ef; border-left: 4px solid var(--error);
+      padding: 10px 14px; border-radius: 0 3px 3px 0;
+      font-size: 13.5px; color: var(--error);
+    }
+
+    /* ─── Footer / Input ─────────────────────────────────── */
+    footer {
+      border-top: 2px solid var(--border);
+      background: var(--white);
+      padding: 14px 24px;
+      box-shadow: 0 -2px 12px rgba(26,58,26,0.08);
+    }
+
+    .input-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: var(--cream);
+      border: 1.5px solid var(--border-dark);
+      border-radius: 3px;
+      padding: 4px 4px 4px 16px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-wrap:focus-within {
+      border-color: var(--green-mid);
+      box-shadow: 0 0 0 3px rgba(45,106,45,0.1);
+    }
+
+    textarea#input {
+      flex: 1; background: transparent; border: none;
+      color: var(--text-dark); font-family: var(--font-body);
+      font-size: 15px; line-height: 1.5;
+      resize: none; padding: 11px 0; max-height: 180px; outline: none;
+    }
+    textarea#input::placeholder { color: var(--tan-dark); }
+
+    button#send {
+      background: var(--green-mid); color: var(--white);
+      border: none; padding: 10px 22px;
+      font-family: var(--font-head); font-weight: 600;
+      letter-spacing: 2px; font-size: 14px;
+      text-transform: uppercase;
+      cursor: pointer; border-radius: 2px; transition: all 0.15s;
+      position: relative; overflow: hidden;
+    }
+    button#send::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+    }
+    button#send:hover:not(:disabled) {
+      background: var(--green-bright);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(45,106,45,0.35);
+    }
+    button#send:disabled { background: var(--green-muted); cursor: not-allowed; transform: none; }
+
+    .hint {
+      max-width: 780px; margin: 7px auto 0;
+      font-family: var(--font-mono); font-size: 10px;
+      color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px;
+    }
+    .hint kbd {
+      background: var(--cream-2); border: 1px solid var(--border);
+      padding: 1px 5px; border-radius: 2px;
+      font-family: var(--font-mono); color: var(--text-light);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--cream-2); }
+    ::-webkit-scrollbar-thumb { background: var(--tan); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--tan-dark); }
+
+    @media (max-width: 640px) {
+      header { padding: 0 14px; min-height: 54px; }
+      main { padding: 16px 14px; }
+      footer { padding: 12px 14px; }
+      .user-email { display: none; }
+      .nav-tag { display: none; }
+      .examples { grid-template-columns: 1fr; }
+      .welcome-title { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-area">
+      <img
+        class="logo-img"
+        src="https://monkeymans.com/wp-content/uploads/2025/07/White-1024x308.png"
+        alt="Monkeyman's Tree Service"
+        onerror="this.style.display='none'; document.getElementById('logo-fb').style.display='block';"
+      />
+      <span id="logo-fb" style="display:none;" class="logo-fallback">🌲 MONKEYMAN'S</span>
+      <span class="nav-tag">Agent Console</span>
+    </div>
+
+    <div class="header-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-details">
+          <span class="user-name"  id="userName">Loading…</span>
+          <span class="user-email" id="userEmail"></span>
+        </div>
+      </div>
+      <span class="role-badge" id="roleBadge">—</span>
+      <button class="hdr-btn"        id="newSessionBtn">New Chat</button>
+      <button class="hdr-btn logout" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <main id="messages"></main>
+
+  <footer>
+    <div class="input-wrap">
+      <textarea id="input" rows="1" placeholder="Ask about employees, tasks, PTO, timecards, incidents, permits…"></textarea>
+      <button id="send">Send</button>
+    </div>
+    <div class="hint">
+      <kbd>↵</kbd> Send &nbsp;·&nbsp; <kbd>Shift</kbd>+<kbd>↵</kbd> New line &nbsp;·&nbsp; Hover a tool badge to see inputs
+    </div>
+  </footer>
+
+  <script>
+    // ─── Auth guard ─────────────────────────────────────────
+    const saved = sessionStorage.getItem('mm_auth');
+    let auth = null;
+    try { auth = saved ? JSON.parse(saved) : null; } catch (_) {}
+    if (!auth || !auth.token) window.location.replace('/login.html');
+
+    // ─── State ───────────────────────────────────────────────
+    const state = {
+      sessionId: sessionStorage.getItem('mm_session_id') || newSid(),
+      inFlight: false,
+    };
+    sessionStorage.setItem('mm_session_id', state.sessionId);
+
+    // ─── DOM ────────────────────────────────────────────────
+    const $ = s => document.querySelector(s);
+    const messagesEl    = $('#messages');
+    const inputEl       = $('#input');
+    const sendBtn       = $('#send');
+    const newSessionBtn = $('#newSessionBtn');
+    const logoutBtn     = $('#logoutBtn');
+
+    // Populate header
+    const initials = auth.name
+      ? auth.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+      : (auth.email || '?')[0].toUpperCase();
+    $('#userAvatar').textContent = initials;
+    $('#userName').textContent   = auth.name || auth.email;
+    $('#userEmail').textContent  = auth.email;
+    const badge = $('#roleBadge');
+    badge.textContent = auth.role || 'Employee';
+    badge.className   = 'role-badge ' + (auth.role || 'Employee');
+
+    marked.setOptions({ breaks: true, gfm: true });
+
+    // ─── Helpers ────────────────────────────────────────────
+    function newSid() { return 'web-' + Math.random().toString(36).slice(2,10) + '-' + Date.now().toString(36).slice(-4); }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])
+      );
+    }
+
+    function ensureList() {
+      if (messagesEl.querySelector('.welcome')) {
+        messagesEl.innerHTML = '<div class="msg-list" id="msgList"></div>';
+      }
+      let list = messagesEl.querySelector('#msgList');
+      if (!list) {
+        list = document.createElement('div');
+        list.className = 'msg-list'; list.id = 'msgList';
+        messagesEl.appendChild(list);
+      }
+      return list;
+    }
+
+    function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+    function appendMsg(role, content, toolCalls) {
+      const list = ensureList();
+      const div  = document.createElement('div');
+      div.className = 'msg ' + role;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+
+      if (role === 'user') {
+        bubble.textContent = content;
+      } else {
+        bubble.innerHTML = marked.parse(content);
+        if (toolCalls && toolCalls.length) {
+          const trace = document.createElement('div');
+          trace.className = 'tool-trace';
+          toolCalls.forEach(tc => {
+            const b = document.createElement('span');
+            b.className = 'tool-badge ' + (tc.ok ? 'ok' : 'err');
+            b.innerHTML = `<span class="dot"></span>${esc(tc.name)}<span class="dur">${tc.durationMs}ms</span>`;
+            b.title = `Round ${tc.round} · ${tc.ok ? 'OK' : 'ERROR'}\n\nInput:\n${JSON.stringify(tc.input, null, 2)}`;
+            trace.appendChild(b);
+          });
+          bubble.appendChild(trace);
+        }
+      }
+      div.appendChild(bubble);
+      list.appendChild(div);
+      scrollBottom();
+    }
+
+    function appendTyping() {
+      const list = ensureList();
+      const div  = document.createElement('div');
+      div.className = 'msg assistant';
+      div.innerHTML  = '<div class="typing"><span></span><span></span><span></span></div>';
+      list.appendChild(div);
+      scrollBottom();
+      return div;
+    }
+
+    function appendError(msg) {
+      const list = ensureList();
+      const div  = document.createElement('div');
+      div.className = 'msg assistant';
+      div.innerHTML  = `<div class="error-msg">⚠ ${esc(msg)}</div>`;
+      list.appendChild(div);
+      scrollBottom();
+    }
+
+    function autoResize() {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 180) + 'px';
+    }
+
+    function setBusy(b) { state.inFlight = b; sendBtn.disabled = b; }
+
+    // ─── Welcome ────────────────────────────────────────────
+    function renderWelcome() {
+      const first = (auth.name || auth.email).split(' ')[0];
+      messagesEl.innerHTML = `
+        <div class="welcome">
+          <div class="welcome-tree">🌲</div>
+          <div class="welcome-title">Ready to Help</div>
+          <p class="welcome-greet">Welcome, <strong>${esc(first)}</strong> — signed in as <strong>${esc(auth.role || 'Employee')}</strong>. No verification prompts needed.</p>
+          <div class="examples-label">Quick start</div>
+          <div class="examples" id="examples">
+            <button class="example" data-prompt="Show me today's tasks">Show me today's tasks</button>
+            <button class="example" data-prompt="Who is on call this month?">Who is on call this month?</button>
+            <button class="example" data-prompt="Show me my PTO records">Show my PTO records</button>
+            <button class="example" data-prompt="List all available forms and checklists">List forms & checklists</button>
+            <button class="example" data-prompt="What permits do I need for tree removal in Milwaukie?">Permits for Milwaukie?</button>
+            <button class="example" data-prompt="Show me the equipment inventory">Equipment inventory</button>
+          </div>
+        </div>
+      `;
+      messagesEl.querySelectorAll('.example').forEach(btn => {
+        btn.addEventListener('click', () => {
+          inputEl.value = btn.dataset.prompt;
+          inputEl.focus();
+          autoResize();
+        });
+      });
+    }
+
+    // ─── Send ────────────────────────────────────────────────
+    async function send() {
+      const text = inputEl.value.trim();
+      if (!text || state.inFlight) return;
+      appendMsg('user', text);
+      inputEl.value = '';
+      autoResize();
+      setBusy(true);
+      const typing = appendTyping();
+
+      try {
+        const res = await fetch('/chat', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + auth.token },
+          body:    JSON.stringify({ sessionId: state.sessionId, chatInput: text }),
+        });
+        typing.remove();
+
+        if (res.status === 401) {
+          sessionStorage.removeItem('mm_auth');
+          window.location.replace('/login.html');
+          return;
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          appendError(err.error || 'HTTP ' + res.status);
+          return;
+        }
+        const data = await res.json();
+        appendMsg('assistant', data.output || '(empty response)', data.toolCalls);
+      } catch (err) {
+        typing.remove();
+        appendError('Network error: ' + err.message);
+      } finally {
+        setBusy(false);
+        inputEl.focus();
+      }
+    }
+
+    // ─── New Session ────────────────────────────────────────
+    async function newSession() {
+      if (state.inFlight) return;
+      try { await fetch('/chat/' + encodeURIComponent(state.sessionId), { method: 'DELETE' }); } catch (_) {}
+      state.sessionId = newSid();
+      sessionStorage.setItem('mm_session_id', state.sessionId);
+      renderWelcome();
+      inputEl.focus();
+    }
+
+    // ─── Logout ──────────────────────────────────────────────
+    async function logout() {
+      try { await fetch('/auth/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + auth.token } }); } catch (_) {}
+      sessionStorage.removeItem('mm_auth');
+      sessionStorage.removeItem('mm_session_id');
+      window.location.replace('/login.html');
+    }
+
+    // ─── Health probe ────────────────────────────────────────
+    fetch('/health').then(r => r.json()).catch(() => {});
+
+    // ─── Events ─────────────────────────────────────────────
+    sendBtn.addEventListener('click', send);
+    newSessionBtn.addEventListener('click', newSession);
+    logoutBtn.addEventListener('click', logout);
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    inputEl.addEventListener('input', autoResize);
+
+    renderWelcome();
+    inputEl.focus();
+  </script>
+</body>
+</html>
