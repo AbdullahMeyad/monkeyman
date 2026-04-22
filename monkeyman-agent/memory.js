@@ -1,49 +1,44 @@
 // memory.js
-// Session-keyed conversation history with a 4-hour idle TTL.
+// Session-keyed Gemini conversation history with a 4-hour idle TTL.
 //
-// KEY FIX: Never trim in the middle of a tool-use exchange.
-// The Anthropic API requires that every tool_result in a user turn
-// has a matching tool_use in the immediately preceding assistant turn.
-// Naive slice-by-count can orphan tool_results, causing HTTP 400.
+// Gemini turn shape: { role: 'user'|'model', parts: [ {text} | {functionCall} | {functionResponse} ] }
 //
-// Safe trim rule: only drop messages from the front at a point where
-// the NEXT message is a plain user text turn (not a tool_result turn).
-// That guarantees the remaining history always starts with a clean exchange.
+// KEY RULE: Never trim in the middle of a tool-use exchange. A user turn whose
+// parts are all `functionResponse` must be preceded by a `model` turn that
+// issued the matching `functionCall`s. Orphaned tool-response turns produce
+// API errors. Safe-trim only at a boundary where the next message is a plain
+// user text turn.
 
-const TTL_MS      = 1000 * 60 * 60 * 4;  // 4-hour idle TTL
+const TTL_MS       = 1000 * 60 * 60 * 4;  // 4-hour idle TTL
 const MAX_MESSAGES = 40;                   // max messages kept
 
 const sessions = new Map();
 
-/** True if this message is a "tool result" user turn (not a human text message) */
-function isToolResultTurn(msg) {
+/** True if this message is a tool-response continuation (not a human text turn). */
+function isToolResponseTurn(msg) {
   if (msg.role !== 'user') return false;
-  if (!Array.isArray(msg.content)) return false;
-  return msg.content.every(b => b.type === 'tool_result');
+  if (!Array.isArray(msg.parts) || msg.parts.length === 0) return false;
+  return msg.parts.every(p => p && p.functionResponse !== undefined);
 }
 
 /**
  * Trim history to at most MAX_MESSAGES, but only cut at a safe boundary:
- * the message at position [cutPoint] must be a plain user turn, not a
- * tool_result turn, so the remaining slice starts a valid exchange.
+ * the message at [cutPoint] must be a plain user text turn, not a tool
+ * response continuation, so the remaining slice starts a valid exchange.
  */
 function safeTrim(messages) {
   if (messages.length <= MAX_MESSAGES) return messages;
 
-  // How many we want to drop from the front
   const excess = messages.length - MAX_MESSAGES;
 
-  // Walk forward from `excess` to find the first index that is safe to start at.
-  // Safe = the message at that index is a plain user turn (role=user, content=string
-  // or content=[{type:'text',...}]), not a tool_result continuation.
   for (let i = excess; i < messages.length - 1; i++) {
     const msg = messages[i];
-    if (msg.role === 'user' && !isToolResultTurn(msg)) {
+    if (msg.role === 'user' && !isToolResponseTurn(msg)) {
       return messages.slice(i);
     }
   }
 
-  // Fallback: nothing safe found — keep everything (better to grow than corrupt)
+  // Nothing safe found — better to grow than corrupt the sequence
   return messages;
 }
 

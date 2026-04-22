@@ -48,7 +48,7 @@ const TOOLS = [
     spec: {
       name: 'Retrieve_All_Employee_Details',
       description: 'List or search all employees in the MonkeyMan system. Use to resolve a name to an email when the user gives a person\'s name instead of an email.',
-      input_schema: { type: 'object', properties: {} },
+      parameters: { type: 'object', properties: {} },
     },
     handler: () => http('GET', '/employee/all'),
   },
@@ -56,7 +56,7 @@ const TOOLS = [
     spec: {
       name: 'Retrieve_Specific_Employee_Details',
       description: 'Get an employee profile (including the MongoDB _id) by their email address. Required to resolve _id values before calling Daily_task_create.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email address' } },
         required: ['email'],
@@ -68,7 +68,7 @@ const TOOLS = [
     spec: {
       name: 'Get_user_role_and_permissions',
       description: 'Get an employee\'s role, status, and feature-access permissions list by email. Call this FIRST before any write action to enforce role gating (PTO approve, VTR verify, task create, incident report, PTO request).',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email address' } },
         required: ['email'],
@@ -82,7 +82,7 @@ const TOOLS = [
     spec: {
       name: 'projects_tool',
       description: 'Retrieve projects associated with an employee by email. Used to resolve a project _id when creating a task.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email address' } },
         required: ['email'],
@@ -94,7 +94,7 @@ const TOOLS = [
     spec: {
       name: 'equipment_products_tool',
       description: 'Retrieve the full equipment / product inventory.',
-      input_schema: { type: 'object', properties: {} },
+      parameters: { type: 'object', properties: {} },
     },
     handler: () => http('GET', '/product', { query: { page: 1, limit: 9000000 } }),
   },
@@ -102,7 +102,7 @@ const TOOLS = [
     spec: {
       name: 'Get_task_by_email',
       description: 'List tasks assigned to a specific employee by email.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email address' } },
         required: ['email'],
@@ -114,7 +114,7 @@ const TOOLS = [
     spec: {
       name: 'Get_today_task',
       description: "Retrieve all of today's tasks (no filtering by user).",
-      input_schema: { type: 'object', properties: {} },
+      parameters: { type: 'object', properties: {} },
     },
     handler: () => http('GET', '/daily-task'),
   },
@@ -122,7 +122,7 @@ const TOOLS = [
     spec: {
       name: 'Get_task_by_create_date',
       description: 'Retrieve tasks by their creation date.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { date: { type: 'string', description: 'Date in YYYY-MM-DD format' } },
         required: ['date'],
@@ -134,7 +134,7 @@ const TOOLS = [
     spec: {
       name: 'Daily_task_create',
       description: 'Create a daily task. STRICT: assignedBy and every entry in assignedTo MUST be 24-character MongoDB _id strings (NOT emails or names) resolved via Retrieve_Specific_Employee_Details. The OTP gate must pass on the manager email before calling this tool.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           title:       { type: 'string', description: 'Task title' },
@@ -143,8 +143,7 @@ const TOOLS = [
           dueDate:     { type: 'string', description: 'Due date in ISO 8601, e.g. 2026-02-25T00:00:00.000Z' },
           assignedBy:  { type: 'string', description: "Manager's MongoDB _id (24-char hex). Resolve via Retrieve_Specific_Employee_Details." },
           assignedTo:  { type: 'array', items: { type: 'string' }, description: 'Array of assignee MongoDB _id strings (24-char hex each).' },
-          project:     { type: ['string', 'null'], description: 'Project _id or null', default: null },
-          attachments: { type: 'array', items: {}, default: [] },
+          project:     { type: 'string', description: 'Optional project _id (24-char hex). Omit if no project.' },
         },
         required: ['title', 'details', 'priority', 'dueDate', 'assignedBy', 'assignedTo'],
       },
@@ -159,7 +158,7 @@ const TOOLS = [
     spec: {
       name: 'Get_pto_by_email',
       description: 'PRIMARY tool for PTO lookups. Returns all PTO records for a given employee email.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email address' } },
         required: ['email'],
@@ -171,7 +170,7 @@ const TOOLS = [
     spec: {
       name: 'Get_PTO_by_id',
       description: 'Retrieve a single PTO record by its MongoDB _id (24-char hex).',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { id: { type: 'string', description: 'PTO _id (24-character hex string)' } },
         required: ['id'],
@@ -183,7 +182,7 @@ const TOOLS = [
     spec: {
       name: 'Get_all_PTO',
       description: 'LAST RESORT — fetches ALL PTO records overlapping a date range across the company. Always prefer Get_pto_by_email first. If used, you MUST filter the results by the requested employee email locally before showing anything.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           startDate: { type: 'string', description: 'Range start in YYYY-MM-DD' },
@@ -198,7 +197,7 @@ const TOOLS = [
     spec: {
       name: 'Request_a_PTO',
       description: 'Submit a PTO request. Requires the role gate (Active employee with my_time_off_requests.create) and OTP gate on the submitter email to pass first. Reason MUST be rewritten formally before calling.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           email:     { type: 'string', description: 'Submitter email' },
@@ -220,7 +219,7 @@ const TOOLS = [
     spec: {
       name: 'Approve_or_Deny_a_PTO',
       description: 'Approve or reject a PTO request. MANAGER-ONLY. Both gates required. action MUST be exactly "approved" or "rejected" (lowercase).',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           id:            { type: 'string', description: 'PTO _id (24-char hex)' },
@@ -240,7 +239,7 @@ const TOOLS = [
     spec: {
       name: 'Get_VTR_by_email',
       description: 'Retrieve VTR (timecard) records for an employee. Provide either weekEnding OR (startDate AND endDate). With no date params, defaults to today.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           email:      { type: 'string', description: 'Employee email' },
@@ -258,7 +257,7 @@ const TOOLS = [
     spec: {
       name: 'Verify_VTR',
       description: 'Mark a VTR as verified. MANAGER-ONLY. Both gates required on verifiedByEmail.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           id:               { type: 'string', description: 'VTR _id (24-char hex), resolved via Get_VTR_by_email' },
@@ -276,7 +275,7 @@ const TOOLS = [
     spec: {
       name: 'Report_incident',
       description: 'File a new incident report. completedByEmail and incidentDescription are required. Both gates required on completedByEmail.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           completedByEmail:      { type: 'string', description: 'Email of the person filing the report' },
@@ -302,7 +301,7 @@ const TOOLS = [
     spec: {
       name: 'Get_incidents_by_email',
       description: 'Retrieve past incident reports for an employee (filed by, involved in, or witnessing). Supports pagination.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           email: { type: 'string', description: 'Employee email' },
@@ -321,7 +320,7 @@ const TOOLS = [
     spec: {
       name: 'Get_my_on_call_schedule',
       description: "Retrieve the on-call schedule for a specific employee's team(s) by email.",
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { email: { type: 'string', description: 'Employee email' } },
         required: ['email'],
@@ -333,7 +332,7 @@ const TOOLS = [
     spec: {
       name: 'Get_all_on_call_rotations',
       description: 'Retrieve all on-call rotations. Optional year + month filter (must pair).',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           year:  { type: 'string', description: 'Optional year e.g. 2026' },
@@ -347,7 +346,7 @@ const TOOLS = [
     spec: {
       name: 'Get_on_call_by_date_range',
       description: 'Retrieve on-call rotations overlapping a date range. Both dates required in YYYY-MM-DD.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           startDate: { type: 'string', description: 'YYYY-MM-DD' },
@@ -364,7 +363,7 @@ const TOOLS = [
     spec: {
       name: 'List_forms',
       description: 'Retrieve all active checklist templates / forms, sorted by display order.',
-      input_schema: { type: 'object', properties: {} },
+      parameters: { type: 'object', properties: {} },
     },
     handler: () => http('GET', '/forms'),
   },
@@ -372,7 +371,7 @@ const TOOLS = [
     spec: {
       name: 'Get_form_by_id',
       description: 'Retrieve a specific form template by its _id (24-char hex).',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: { id: { type: 'string', description: 'Form _id' } },
         required: ['id'],
@@ -386,7 +385,7 @@ const TOOLS = [
     spec: {
       name: 'Permit_rules_lookup',
       description: 'Look up permit rules. All filters optional and case-insensitive.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           municipality: { type: 'string', description: 'Optional jurisdiction/city filter' },
@@ -405,7 +404,7 @@ const TOOLS = [
     spec: {
       name: 'Send_OTP',
       description: 'STEP 1 of OTP verification. Generate and email a 6-digit code to the actor. Call this only AFTER the role gate has confirmed the actor is authorized for the pending write action. After calling, ask the user to paste the code, then call Verify_OTP.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           email:     { type: 'string', description: "Actor's email — the person performing the pending write action" },
@@ -422,7 +421,7 @@ const TOOLS = [
     spec: {
       name: 'Verify_OTP',
       description: 'STEP 2 of OTP verification. Validate the 6-digit code the user pasted. Only proceed to the pending write tool if the response has verified: true.',
-      input_schema: {
+      parameters: {
         type: 'object',
         properties: {
           email: { type: 'string', description: 'Same email used in Send_OTP' },

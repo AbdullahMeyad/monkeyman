@@ -1,6 +1,6 @@
-// agent.js
+// agent.js — Gemini tool-use loop
 import 'dotenv/config';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -11,44 +11,14 @@ import { getHistory, appendHistory } from './memory.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASE_SYSTEM_PROMPT = await fs.readFile(path.join(__dirname, 'system-prompt.md'), 'utf-8');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-const MODEL          = 'claude-sonnet-4-6';
-const MAX_TOKENS     = 4096;
-const MAX_TOOL_ROUNDS = Number(process.env.MAX_TOOL_ROUNDS || 15);
+const MODEL               = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MAX_TOOL_ROUNDS     = Number(process.env.MAX_TOOL_ROUNDS || 15);
 const TOOL_RESULT_CHAR_CAP = 100_000;
 
 function clip(str, n) {
   return str.length <= n ? str : `${str.slice(0, n)}\n...[truncated]`;
-}
-
-/**
- * Validate the message array before sending to the API.
- * Strips any leading tool_result turns that have no preceding tool_use assistant turn.
- * This is a safety net in case the memory trim left an invalid sequence.
- */
-function sanitizeMessages(messages) {
-  // Find the first index where the conversation is valid:
-  // either it starts with a user text turn, or the first assistant turn
-  // before any tool_result has tool_use content.
-  const safe = [];
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i];
-    // Skip leading tool_result user turns with no preceding assistant/tool_use
-    if (
-      msg.role === 'user' &&
-      Array.isArray(msg.content) &&
-      msg.content.length > 0 &&
-      msg.content.every(b => b.type === 'tool_result') &&
-      safe.length === 0
-    ) {
-      // Orphaned tool_result at the start — drop it
-      console.warn('[agent] dropped orphaned tool_result turn at index', i);
-      continue;
-    }
-    safe.push(msg);
-  }
-  return safe;
 }
 
 function buildSystemPrompt(userContext) {
@@ -74,10 +44,14 @@ The user has logged in. Their identity is **pre-verified**. Apply these rules fo
   return BASE_SYSTEM_PROMPT + sessionBlock;
 }
 
+/**
+ * Run one user turn through Gemini with tool-use.
+ * Gemini contents shape: { role: 'user'|'model', parts: [ {text} | {functionCall} | {functionResponse} ] }
+ */
 export async function runAgent(sessionId, userMessage, userContext = null) {
   const history  = getHistory(sessionId);
-  const userTurn = { role: 'user', content: userMessage };
-  const messages = sanitizeMessages([...history, userTurn]);
+  const userTurn = { role: 'user', parts: [{ text: userMessage }] };
+  const contents = [...history, userTurn];
   const newTurns = [userTurn];
   const toolCallLog = [];
 
@@ -86,58 +60,73 @@ export async function runAgent(sessionId, userMessage, userContext = null) {
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     let response;
     try {
-      response = await client.messages.create({
+      response = await ai.models.generateContent({
         model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: systemPrompt,
-        tools: toolDefinitions,
-        messages,
+        contents,
+        config: {
+          systemInstruction: systemPrompt,
+          tools: [{ functionDeclarations: toolDefinitions }],
+        },
       });
     } catch (err) {
-      // Surface the Anthropic error message clearly
-      const msg = err?.error?.error?.message || err?.message || String(err);
-      console.error('[agent] Anthropic API error:', msg);
+      const msg = err?.message || String(err);
+      console.error('[agent] Gemini API error:', msg);
       throw new Error(msg);
     }
 
-    const assistantTurn = { role: 'assistant', content: response.content };
-    messages.push(assistantTurn);
-    newTurns.push(assistantTurn);
+    const parts     = response.candidates?.[0]?.content?.parts || [];
+    const modelTurn = { role: 'model', parts };
+    contents.push(modelTurn);
+    newTurns.push(modelTurn);
 
-    if (response.stop_reason === 'tool_use') {
-      const toolUses = response.content.filter(b => b.type === 'tool_use');
+    const calls = response.functionCalls || [];
 
+    if (calls.length > 0) {
       const results = await Promise.all(
-        toolUses.map(async tu => {
+        calls.map(async (call) => {
           const start  = Date.now();
-          const result = await executeTool(tu.name, tu.input);
+          const result = await executeTool(call.name, call.args || {});
           toolCallLog.push({
             round: round + 1,
-            name: tu.name,
-            input: tu.input,
+            name: call.name,
+            input: call.args || {},
             ok: !result?.error,
             durationMs: Date.now() - start,
           });
+
+          // functionResponse.response must be an object; wrap primitives/arrays
+          let wrapped;
+          if (result === null || result === undefined) {
+            wrapped = { result: null };
+          } else if (typeof result !== 'object' || Array.isArray(result)) {
+            wrapped = { result };
+          } else {
+            wrapped = result;
+          }
+
+          // Cap huge payloads so we don't blow the context window
+          const serialized = JSON.stringify(wrapped);
+          const payload = serialized.length > TOOL_RESULT_CHAR_CAP
+            ? { truncated: true, content: clip(serialized, TOOL_RESULT_CHAR_CAP) }
+            : wrapped;
+
           return {
-            type: 'tool_result',
-            tool_use_id: tu.id,
-            content: clip(JSON.stringify(result), TOOL_RESULT_CHAR_CAP),
+            functionResponse: {
+              name: call.name,
+              response: payload,
+            },
           };
         }),
       );
 
-      const resultTurn = { role: 'user', content: results };
-      messages.push(resultTurn);
+      const resultTurn = { role: 'user', parts: results };
+      contents.push(resultTurn);
       newTurns.push(resultTurn);
       continue;
     }
 
-    const textReply = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n')
-      .trim();
-
+    // No tool calls → done
+    const textReply = (response.text || '').trim();
     appendHistory(sessionId, ...newTurns);
     return { text: textReply || '(no response)', toolCalls: toolCallLog };
   }

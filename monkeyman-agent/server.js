@@ -175,7 +175,7 @@ app.post('/mm-verify-otp', (req, res) => {
 // ─── Health ──────────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({
   ok: true,
-  model: 'claude-sonnet-4-6',
+  model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   devMode: DEV_MODE,
 }));
 
@@ -188,8 +188,8 @@ if (!process.env.VERCEL) {
     if (DEV_MODE) {
       console.log('   ⚙️   DEV MODE — OTPs print to this terminal if triggered.');
     }
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.warn('   ⚠️   ANTHROPIC_API_KEY not set — chat will fail until you set it.');
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('   ⚠️   GEMINI_API_KEY not set — chat will fail until you set it.');
     }
     if (!LOGIN_PASSWORD) {
       console.log('   ℹ️   LOGIN_PASSWORD not set — any password will be accepted at login.');
