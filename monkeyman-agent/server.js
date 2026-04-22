@@ -179,17 +179,23 @@ app.get('/health', (_req, res) => res.json({
   devMode: DEV_MODE,
 }));
 
-const PORT = Number(process.env.PORT || 3000);
-app.listen(PORT, () => {
-  console.log(`\n🐵  MonkeyMan Claude agent listening on http://localhost:${PORT}\n`);
-  if (DEV_MODE) {
-    console.log('   ⚙️   DEV MODE — OTPs print to this terminal if triggered.');
-  }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.warn('   ⚠️   ANTHROPIC_API_KEY not set — chat will fail until you set it.');
-  }
-  if (!LOGIN_PASSWORD) {
-    console.log('   ℹ️   LOGIN_PASSWORD not set — any password will be accepted at login.');
-  }
-  console.log('');
-});
+// On Vercel, export the app as a serverless handler — do NOT call app.listen.
+// Locally (no VERCEL env var), bind a port like before.
+if (!process.env.VERCEL) {
+  const PORT = Number(process.env.PORT || 3000);
+  app.listen(PORT, () => {
+    console.log(`\n🐵  MonkeyMan Claude agent listening on http://localhost:${PORT}\n`);
+    if (DEV_MODE) {
+      console.log('   ⚙️   DEV MODE — OTPs print to this terminal if triggered.');
+    }
+    if (!process.env.ANTHROPIC_API_KEY) {
+      console.warn('   ⚠️   ANTHROPIC_API_KEY not set — chat will fail until you set it.');
+    }
+    if (!LOGIN_PASSWORD) {
+      console.log('   ℹ️   LOGIN_PASSWORD not set — any password will be accepted at login.');
+    }
+    console.log('');
+  });
+}
+
+export default app;
